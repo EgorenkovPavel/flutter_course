@@ -28,7 +28,7 @@ class ConnectedProductsModel extends Model {
     };
 
     http
-        .post('https://flutter-products-ddc20.firebaseio.com/products.json',
+        .post('https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}',
         body: json.encode(productData))
         .then((http.Response response) {
       if (response.statusCode != 200) return;
@@ -55,7 +55,7 @@ class ConnectedProductsModel extends Model {
   Future<Null> fetchProducts() {
     _isLoading = true;
     return http
-        .get('https://flutter-products-ddc20.firebaseio.com/products.json')
+        .get('https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       _isLoading = false;
 
@@ -146,7 +146,7 @@ class ProductsModel extends ConnectedProductsModel {
     http
         .put(
         'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
-            .id}.json',
+            .id}.json?auth=${_authenticatedUser.token}',
         body: json.encode(updateProduct))
         .then((http.Response response) {
       _isLoading = false;
@@ -174,7 +174,7 @@ class ProductsModel extends ConnectedProductsModel {
 
     http.delete(
         'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
-            .id}.json')
+            .id}.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       _isLoading = false;
 
@@ -240,7 +240,7 @@ class UserModel extends ConnectedProductsModel {
 
     if(!hasError) {
       _authenticatedUser =
-          User(id: resp['localId'], email: email, password: password);
+          User(id: resp['localId'], email: email, token: resp['idToken']);
     }
 
     _isLoading = false;
