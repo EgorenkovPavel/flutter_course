@@ -1,0 +1,252 @@
+import 'package:scoped_model/scoped_model.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'dart:async';
+
+import '../models/product.dart';
+import '../models/user.dart';
+import '../models/auth.dart';
+
+class ConnectedProductsModel extends Model {
+  List<Product> _products = [];
+  User _authenticatedUser;
+  String _selProductId;
+  bool _isLoading = false;
+
+  bool get isLoading => _isLoading;
+
+  void addProduct(String title, String description, String image,
+      double price) {
+    _isLoading = true;
+
+    final Map<String, dynamic> productData = {
+      'title': title,
+      'description': description,
+      'image':
+      'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
+      'price': price
+    };
+
+    http
+        .post('https://flutter-products-ddc20.firebaseio.com/products.json',
+        body: json.encode(productData))
+        .then((http.Response response) {
+      if (response.statusCode != 200) return;
+
+      _isLoading = false;
+
+      final Map<String, dynamic> value = json.decode(response.body);
+
+      final newProduct = Product(
+          id: value['name'],
+          title: title,
+          description: description,
+          image: image,
+          price: price,
+          userId: _authenticatedUser.id,
+          userEmail: _authenticatedUser.email);
+      _products.add(newProduct);
+      _selProductId = null;
+    }).catchError((error) {
+
+    });
+  }
+
+  Future<Null> fetchProducts() {
+    _isLoading = true;
+    return http
+        .get('https://flutter-products-ddc20.firebaseio.com/products.json')
+        .then((http.Response response) {
+      _isLoading = false;
+
+      final List<Product> fetchedProductList = [];
+
+      final Map<String, dynamic> value = json.decode(response.body);
+
+      if (value != null) {
+        value.forEach((String key, dynamic data) {
+          final Product product = Product(
+              id: key,
+              title: data['title'],
+              description: data['description'],
+              price: data['price'],
+              image: data['image'],
+              userId: _authenticatedUser.id,
+              userEmail: _authenticatedUser.email);
+          fetchedProductList.add(product);
+        });
+      }
+      _products = fetchedProductList;
+      notifyListeners();
+    });
+  }
+}
+
+class ProductsModel extends ConnectedProductsModel {
+  bool _showFavorites = false;
+
+  List<Product> get allProducts => List.from(_products);
+
+  List<Product> get displayedProducts {
+    if (_showFavorites) {
+      return List.from(_products.where((Product product) {
+        return product.isFavorite;
+      }));
+    } else {
+      return List.from(_products);
+    }
+  }
+
+  bool get showFavorites => _showFavorites;
+
+  String get selectedProductId => _selProductId;
+
+  Product get selectedProduct {
+    if (_selProductId == null) {
+      return null;
+    } else {
+      return _products.firstWhere((Product product) {
+        return product.id == _selProductId;
+      });
+    }
+  }
+
+  void toggleFavorite() {
+    Product newProduct = Product(
+        id: selectedProduct.id,
+        title: selectedProduct.title,
+        description: selectedProduct.description,
+        price: selectedProduct.price,
+        image: selectedProduct.image,
+        userId: selectedProduct.userId,
+        userEmail: selectedProduct.userEmail,
+        isFavorite: !selectedProduct.isFavorite);
+
+    final int selectProductIndex = _products.indexWhere((Product product) {
+      return product.id == _selProductId;
+    });
+
+    _products[selectProductIndex] = newProduct;
+    _selProductId = null;
+    notifyListeners();
+  }
+
+  void updateProduct(String title, String description, String image,
+      double price) {
+    _isLoading = true;
+
+    final Map<String, dynamic> updateProduct = {
+      'title': title,
+      'description': description,
+      'price': price,
+      'image':
+      'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629'
+    };
+
+    http
+        .put(
+        'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
+            .id}.json',
+        body: json.encode(updateProduct))
+        .then((http.Response response) {
+      _isLoading = false;
+
+      final updatedProduct = Product(
+          id: selectedProduct.id,
+          title: title,
+          description: description,
+          image: image,
+          price: price,
+          userId: _authenticatedUser.id,
+          userEmail: _authenticatedUser.email);
+      final int selectProductIndex = _products.indexWhere((Product product) {
+        return product.id == _selProductId;
+      });
+
+      _products[selectProductIndex] = updatedProduct;
+      _selProductId = null;
+      notifyListeners();
+    });
+  }
+
+  void deleteProduct() {
+    _isLoading = true;
+
+    http.delete(
+        'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
+            .id}.json')
+        .then((http.Response response) {
+      _isLoading = false;
+
+      final int selectProductIndex = _products.indexWhere((Product product) {
+        return product.id == _selProductId;
+      });
+
+      _products.removeAt(selectProductIndex);
+      _selProductId = null;
+      notifyListeners();
+    });
+  }
+
+  void selectProduct(String productId) {
+    _selProductId = productId;
+  }
+
+  void toogleDisplayMode() {
+    _showFavorites = !_showFavorites;
+    notifyListeners();
+  }
+}
+
+class UserModel extends ConnectedProductsModel {
+
+  Future<Map<String, dynamic>> authenticate(String email, String password, AuthMode authMode) async {
+
+    _isLoading = true;
+    notifyListeners();
+
+    final Map<String, dynamic> authData = {
+      'email': email,
+      'password': password,
+      'returnSecureToken': true
+    };
+
+    http.Response response;
+    if(authMode == AuthMode.LOGIN)
+      response = await http.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyByXcMJao6wu5GSCCF1JT_jFPjK9RG3RKQ',
+        body: json.encode(authData),
+        headers: {'Content-Type': 'application/json'});
+    else
+      response = await http.post(
+          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyByXcMJao6wu5GSCCF1JT_jFPjK9RG3RKQ',
+          body: json.encode(authData),
+          headers: {'Content-Type': 'application/json'});
+
+    Map<String, dynamic> resp = json.decode(response.body);
+
+    bool hasError = response.statusCode != 200;
+    String message = '';
+    if(!hasError){
+      message = 'Authenticated succass!';
+    }else if(resp['error']['message'] == 'EMAIL_EXISTS'){
+      message = 'This email already exists';
+    }else if(resp['error']['message'] == 'EMAIL_NOT_FOUND'){
+      message = 'This email not found';
+    }else if(resp['error']['message'] == 'INVALID_PASSWORD'){
+      message = 'Invalid password';
+    }else{
+      message = 'Somethink went wrong';
+    }
+
+    if(!hasError) {
+      _authenticatedUser =
+          User(id: resp['localId'], email: email, password: password);
+    }
+
+    _isLoading = false;
+    notifyListeners();
+
+    return {'success': !hasError, 'message': message};
+  }
+
+}
