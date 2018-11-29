@@ -110,7 +110,7 @@ class AuthPageState extends State<AuthPage> {
       return;
     }
 
-    Navigator.pushReplacementNamed(context, '/products');
+//    Navigator.pushReplacementNamed(context, '/');
   }
 
   @override

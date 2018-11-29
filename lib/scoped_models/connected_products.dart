@@ -1,6 +1,7 @@
 import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:rxdart/subjects.dart';
 
 import 'dart:convert';
 import 'dart:async';
@@ -202,6 +203,11 @@ class ProductsModel extends ConnectedProductsModel {
 
 class UserModel extends ConnectedProductsModel {
 
+  Timer _authTimer;
+  PublishSubject<bool> _userSubject = PublishSubject();
+
+  PublishSubject<bool> get userSubject => _userSubject;
+
   User get authenticatedUser => _authenticatedUser;
 
   Future<Map<String, dynamic>> authenticate(String email, String password, AuthMode authMode) async {
@@ -250,6 +256,16 @@ class UserModel extends ConnectedProductsModel {
       prefs.setString('token', _authenticatedUser.token);
       prefs.setString('userEmail', _authenticatedUser.email);
       prefs.setString('userId', _authenticatedUser.id);
+
+      final int time = int.parse(resp['expiresIn']);
+
+      setAuthTimeout(time);
+      _userSubject.add(true);
+
+      final DateTime now = DateTime.now();
+      final DateTime expiredTime = now.add(Duration(seconds: time));
+
+      prefs.setString('expiredTime', expiredTime.toIso8601String());
     }
 
     _isLoading = false;
@@ -261,21 +277,42 @@ class UserModel extends ConnectedProductsModel {
   void autoAthenticate() async {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token');
+    final String expiredTimeString = prefs.getString('expiredTime');
     if(token != null){
+      final DateTime now = DateTime.now();
+      final DateTime expiredTime = DateTime.parse(expiredTimeString);
+      if(expiredTime.isBefore(now)){
+        _authenticatedUser = null;
+        notifyListeners();
+        return;
+      };
+
       final String userEmail = prefs.getString('userEmail');
       final String userId = prefs.getString('userId');
       _authenticatedUser = User(id: userId, email: userEmail, token: token);
+
+      final int tokenLife = expiredTime.difference(now).inSeconds;
+      setAuthTimeout(tokenLife);
+      _userSubject.add(true);
       notifyListeners();
     }
   }
 
   void logout() async {
     _authenticatedUser = null;
+    _authTimer.cancel();
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     prefs.remove('token');
     prefs.remove('userEmail');
     prefs.remove('userId');
     notifyListeners();
+  }
+
+  void setAuthTimeout(int time){
+    _authTimer = Timer(Duration(seconds: time), (){
+      logout();
+      _userSubject.add(false);
+    });
   }
 
 }

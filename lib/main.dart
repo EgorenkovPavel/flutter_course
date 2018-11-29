@@ -20,12 +20,16 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
 
   MainModel _model = MainModel();
+  bool _isAuthenticated = false;
 
   @override
   void initState() {
     _model.autoAthenticate();
-    
-
+    _model.userSubject.listen((bool data){
+      setState(() {
+        _isAuthenticated = data;
+      });
+    });
     super.initState();
   }
 
@@ -42,13 +46,10 @@ class _MyAppState extends State<MyApp> {
 //      home: AuthPage(),
         routes: {
           '/': (context) {
-            return _model.authenticatedUser == null ? AuthPage() : ProductsPage(_model);
-          },
-          '/products': (context) {
-            return ProductsPage(_model);
+            return !_isAuthenticated ? AuthPage() : ProductsPage(_model);
           },
           '/admin': (context) {
-            return ProductsAdminPage(_model);
+            return !_isAuthenticated ? AuthPage() : ProductsAdminPage(_model);
           },
         },
         onGenerateRoute: (RouteSettings settings) {
@@ -58,14 +59,14 @@ class _MyAppState extends State<MyApp> {
             final String productId = pathElements[2];
             _model.selectProduct(productId);
             return MaterialPageRoute<String>(builder: (context) {
-              return ProductPage();
+              return !_isAuthenticated ? AuthPage() : ProductPage();
             });
           }
           return null;
         },
         onUnknownRoute: (RouteSettings settings) {
           return MaterialPageRoute(builder: (context) {
-            return ProductsPage(_model);
+            return !_isAuthenticated ? AuthPage() : ProductsPage(_model);
           });
         },
       ),
