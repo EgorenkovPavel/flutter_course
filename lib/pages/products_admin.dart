@@ -4,6 +4,7 @@ import './products.dart';
 import './product_list.dart';
 import './product_edit.dart';
 import '../scoped_models/main.dart';
+import '../widgets/logout_list_tile.dart';
 
 class ProductsAdminPage extends StatelessWidget {
 
@@ -29,7 +30,9 @@ class ProductsAdminPage extends StatelessWidget {
                 onTap: () {
                   Navigator.pushReplacementNamed(context, '/products');
                 },
-              )
+              ),
+              Divider(),
+              LogoutListTile(),
             ],
           ),
         ),

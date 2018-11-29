@@ -3,6 +3,7 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../widgets/products.dart';
 import '../scoped_models/main.dart';
+import '../widgets/logout_list_tile.dart';
 
 class ProductsPage extends StatefulWidget {
   final MainModel model;
@@ -36,7 +37,9 @@ class ProductsPageState extends State<ProductsPage> {
                 title: Text('Manage products'),
                 onTap: () {
                   Navigator.pushReplacementNamed(context, '/admin');
-                })
+                }),
+            Divider(),
+            LogoutListTile(),
           ],
         ),
       ),

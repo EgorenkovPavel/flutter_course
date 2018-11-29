@@ -259,7 +259,6 @@ class UserModel extends ConnectedProductsModel {
   }
 
   void autoAthenticate() async {
-
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token');
     if(token != null){
@@ -268,6 +267,15 @@ class UserModel extends ConnectedProductsModel {
       _authenticatedUser = User(id: userId, email: userEmail, token: token);
       notifyListeners();
     }
+  }
+
+  void logout() async {
+    _authenticatedUser = null;
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    prefs.remove('token');
+    prefs.remove('userEmail');
+    prefs.remove('userId');
+    notifyListeners();
   }
 
 }
