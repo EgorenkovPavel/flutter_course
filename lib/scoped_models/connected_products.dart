@@ -18,21 +18,22 @@ class ConnectedProductsModel extends Model {
 
   bool get isLoading => _isLoading;
 
-  void addProduct(String title, String description, String image,
-      double price) {
+  void addProduct(
+      String title, String description, String image, double price) {
     _isLoading = true;
 
     final Map<String, dynamic> productData = {
       'title': title,
       'description': description,
       'image':
-      'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
+          'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
       'price': price
     };
 
     http
-        .post('https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}',
-        body: json.encode(productData))
+        .post(
+            'https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}',
+            body: json.encode(productData))
         .then((http.Response response) {
       if (response.statusCode != 200) return;
 
@@ -50,15 +51,14 @@ class ConnectedProductsModel extends Model {
           userEmail: _authenticatedUser.email);
       _products.add(newProduct);
       _selProductId = null;
-    }).catchError((error) {
-
-    });
+    }).catchError((error) {});
   }
 
   Future<Null> fetchProducts() {
     _isLoading = true;
     return http
-        .get('https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}')
+        .get(
+            'https://flutter-products-ddc20.firebaseio.com/products.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       _isLoading = false;
 
@@ -114,7 +114,22 @@ class ProductsModel extends ConnectedProductsModel {
     }
   }
 
-  void toggleFavorite() {
+  void toggleFavorite() async {
+    final bool newFavorite = !selectedProduct.isFavorite;
+    if (newFavorite) {
+      final http.Response response = await http.put(
+          'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
+          body: json.encode(true));
+      if(response.statusCode != 200){
+        return;
+      }
+    }else{
+      final http.Response response = await http.delete(
+          'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}');
+      if(response.statusCode != 200){
+        return;
+      }
+    }
     Product newProduct = Product(
         id: selectedProduct.id,
         title: selectedProduct.title,
@@ -123,7 +138,7 @@ class ProductsModel extends ConnectedProductsModel {
         image: selectedProduct.image,
         userId: selectedProduct.userId,
         userEmail: selectedProduct.userEmail,
-        isFavorite: !selectedProduct.isFavorite);
+        isFavorite: newFavorite);
 
     final int selectProductIndex = _products.indexWhere((Product product) {
       return product.id == _selProductId;
@@ -134,8 +149,8 @@ class ProductsModel extends ConnectedProductsModel {
     notifyListeners();
   }
 
-  void updateProduct(String title, String description, String image,
-      double price) {
+  void updateProduct(
+      String title, String description, String image, double price) {
     _isLoading = true;
 
     final Map<String, dynamic> updateProduct = {
@@ -143,14 +158,13 @@ class ProductsModel extends ConnectedProductsModel {
       'description': description,
       'price': price,
       'image':
-      'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629'
+          'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629'
     };
 
     http
         .put(
-        'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
-            .id}.json?auth=${_authenticatedUser.token}',
-        body: json.encode(updateProduct))
+            'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}.json?auth=${_authenticatedUser.token}',
+            body: json.encode(updateProduct))
         .then((http.Response response) {
       _isLoading = false;
 
@@ -175,9 +189,9 @@ class ProductsModel extends ConnectedProductsModel {
   void deleteProduct() {
     _isLoading = true;
 
-    http.delete(
-        'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct
-            .id}.json?auth=${_authenticatedUser.token}')
+    http
+        .delete(
+            'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}.json?auth=${_authenticatedUser.token}')
         .then((http.Response response) {
       _isLoading = false;
 
@@ -202,7 +216,6 @@ class ProductsModel extends ConnectedProductsModel {
 }
 
 class UserModel extends ConnectedProductsModel {
-
   Timer _authTimer;
   PublishSubject<bool> _userSubject = PublishSubject();
 
@@ -210,8 +223,8 @@ class UserModel extends ConnectedProductsModel {
 
   User get authenticatedUser => _authenticatedUser;
 
-  Future<Map<String, dynamic>> authenticate(String email, String password, AuthMode authMode) async {
-
+  Future<Map<String, dynamic>> authenticate(
+      String email, String password, AuthMode authMode) async {
     _isLoading = true;
     notifyListeners();
 
@@ -222,10 +235,11 @@ class UserModel extends ConnectedProductsModel {
     };
 
     http.Response response;
-    if(authMode == AuthMode.LOGIN)
-      response = await http.post('https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyByXcMJao6wu5GSCCF1JT_jFPjK9RG3RKQ',
-        body: json.encode(authData),
-        headers: {'Content-Type': 'application/json'});
+    if (authMode == AuthMode.LOGIN)
+      response = await http.post(
+          'https://www.googleapis.com/identitytoolkit/v3/relyingparty/verifyPassword?key=AIzaSyByXcMJao6wu5GSCCF1JT_jFPjK9RG3RKQ',
+          body: json.encode(authData),
+          headers: {'Content-Type': 'application/json'});
     else
       response = await http.post(
           'https://www.googleapis.com/identitytoolkit/v3/relyingparty/signupNewUser?key=AIzaSyByXcMJao6wu5GSCCF1JT_jFPjK9RG3RKQ',
@@ -236,19 +250,19 @@ class UserModel extends ConnectedProductsModel {
 
     bool hasError = response.statusCode != 200;
     String message = '';
-    if(!hasError){
+    if (!hasError) {
       message = 'Authenticated succass!';
-    }else if(resp['error']['message'] == 'EMAIL_EXISTS'){
+    } else if (resp['error']['message'] == 'EMAIL_EXISTS') {
       message = 'This email already exists';
-    }else if(resp['error']['message'] == 'EMAIL_NOT_FOUND'){
+    } else if (resp['error']['message'] == 'EMAIL_NOT_FOUND') {
       message = 'This email not found';
-    }else if(resp['error']['message'] == 'INVALID_PASSWORD'){
+    } else if (resp['error']['message'] == 'INVALID_PASSWORD') {
       message = 'Invalid password';
-    }else{
+    } else {
       message = 'Somethink went wrong';
     }
 
-    if(!hasError) {
+    if (!hasError) {
       _authenticatedUser =
           User(id: resp['localId'], email: email, token: resp['idToken']);
 
@@ -278,14 +292,15 @@ class UserModel extends ConnectedProductsModel {
     final SharedPreferences prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token');
     final String expiredTimeString = prefs.getString('expiredTime');
-    if(token != null){
+    if (token != null) {
       final DateTime now = DateTime.now();
       final DateTime expiredTime = DateTime.parse(expiredTimeString);
-      if(expiredTime.isBefore(now)){
+      if (expiredTime.isBefore(now)) {
         _authenticatedUser = null;
         notifyListeners();
         return;
-      };
+      }
+      ;
 
       final String userEmail = prefs.getString('userEmail');
       final String userId = prefs.getString('userId');
@@ -309,10 +324,9 @@ class UserModel extends ConnectedProductsModel {
     notifyListeners();
   }
 
-  void setAuthTimeout(int time){
-    _authTimer = Timer(Duration(seconds: time), (){
+  void setAuthTimeout(int time) {
+    _authTimer = Timer(Duration(seconds: time), () {
       logout();
     });
   }
-
 }
