@@ -1,5 +1,7 @@
 import 'package:scoped_model/scoped_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'dart:convert';
 import 'dart:async';
 
@@ -200,6 +202,8 @@ class ProductsModel extends ConnectedProductsModel {
 
 class UserModel extends ConnectedProductsModel {
 
+  User get authenticatedUser => _authenticatedUser;
+
   Future<Map<String, dynamic>> authenticate(String email, String password, AuthMode authMode) async {
 
     _isLoading = true;
@@ -241,12 +245,29 @@ class UserModel extends ConnectedProductsModel {
     if(!hasError) {
       _authenticatedUser =
           User(id: resp['localId'], email: email, token: resp['idToken']);
+
+      final SharedPreferences prefs = await SharedPreferences.getInstance();
+      prefs.setString('token', _authenticatedUser.token);
+      prefs.setString('userEmail', _authenticatedUser.email);
+      prefs.setString('userId', _authenticatedUser.id);
     }
 
     _isLoading = false;
     notifyListeners();
 
     return {'success': !hasError, 'message': message};
+  }
+
+  void autoAthenticate() async {
+
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
+    final String token = prefs.getString('token');
+    if(token != null){
+      final String userEmail = prefs.getString('userEmail');
+      final String userId = prefs.getString('userId');
+      _authenticatedUser = User(id: userId, email: userEmail, token: token);
+      notifyListeners();
+    }
   }
 
 }
