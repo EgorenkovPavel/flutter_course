@@ -75,7 +75,8 @@ class ConnectedProductsModel extends Model {
               price: data['price'],
               image: data['image'],
               userId: _authenticatedUser.id,
-              userEmail: _authenticatedUser.email);
+              userEmail: _authenticatedUser.email,
+              isFavorite: data['wishlistUsers'] != null && (data['wishlistUsers'] as Map<String, dynamic>).containsKey(_authenticatedUser.id));
           fetchedProductList.add(product);
         });
       }
