@@ -27,7 +27,8 @@ class ConnectedProductsModel extends Model {
       'description': description,
       'image':
           'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
-      'price': price
+      'price': price,
+      'userId': _authenticatedUser.id
     };
 
     http
@@ -54,7 +55,7 @@ class ConnectedProductsModel extends Model {
     }).catchError((error) {});
   }
 
-  Future<Null> fetchProducts() {
+  Future<Null> fetchProducts({bool onlyForUser = false}) {
     _isLoading = true;
     return http
         .get(
@@ -74,13 +75,17 @@ class ConnectedProductsModel extends Model {
               description: data['description'],
               price: data['price'],
               image: data['image'],
-              userId: _authenticatedUser.id,
+              userId: data['userId'],
               userEmail: _authenticatedUser.email,
-              isFavorite: data['wishlistUsers'] != null && (data['wishlistUsers'] as Map<String, dynamic>).containsKey(_authenticatedUser.id));
+              isFavorite: data['wishlistUsers'] != null &&
+                  (data['wishlistUsers'] as Map<String, dynamic>)
+                      .containsKey(_authenticatedUser.id));
           fetchedProductList.add(product);
         });
       }
-      _products = fetchedProductList;
+      _products = onlyForUser ? fetchedProductList.where((Product product) {
+        return product.userId == _authenticatedUser.id;
+      }).toList() : fetchedProductList;
       notifyListeners();
     });
   }
@@ -121,13 +126,13 @@ class ProductsModel extends ConnectedProductsModel {
       final http.Response response = await http.put(
           'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}',
           body: json.encode(true));
-      if(response.statusCode != 200){
+      if (response.statusCode != 200) {
         return;
       }
-    }else{
+    } else {
       final http.Response response = await http.delete(
           'https://flutter-products-ddc20.firebaseio.com/products/${selectedProduct.id}/wishlistUsers/${_authenticatedUser.id}.json?auth=${_authenticatedUser.token}');
-      if(response.statusCode != 200){
+      if (response.statusCode != 200) {
         return;
       }
     }
@@ -159,7 +164,8 @@ class ProductsModel extends ConnectedProductsModel {
       'description': description,
       'price': price,
       'image':
-          'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629'
+          'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
+      'userId': _authenticatedUser.id
     };
 
     http
