@@ -3,6 +3,8 @@ import 'package:scoped_model/scoped_model.dart';
 
 import '../models/product.dart';
 import '../scoped_models/main.dart';
+import '../widgets/location.dart';
+import '../models/location_data.dart';
 
 class ProductEditPage extends StatefulWidget {
 
@@ -17,7 +19,8 @@ class _productEditPageState extends State<ProductEditPage> {
     'title': null,
     'image': 'assets/food.jpg',
     'description': null,
-    'price': null
+    'price': null,
+    'location': null
   };
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -69,6 +72,10 @@ class _productEditPageState extends State<ProductEditPage> {
     );
   }
 
+  void _setLocation(LocationData locationData){
+    _formData['location'] = locationData;
+  }
+
   void _submitForm(Product product, Function addProduct,
       Function updateProduct) {
     if (!_formKey.currentState.validate()) {
@@ -85,7 +92,8 @@ class _productEditPageState extends State<ProductEditPage> {
       addProduct(_formData['title'],
           _formData['description'],
           _formData['image'],
-          _formData['price']);
+          _formData['price'],
+          _formData['location']);
     } else {
       updateProduct(_formData['title'],
           _formData['description'],
@@ -138,6 +146,10 @@ class _productEditPageState extends State<ProductEditPage> {
                     _buildTitleTextField(product),
                     _buildDescriptionTextField(product),
                     _buildPriceTextField(product),
+                    SizedBox(
+                      height: 10.0,
+                    ),
+                    LocationInput(_setLocation),
                     SizedBox(
                       height: 10.0,
                     ),

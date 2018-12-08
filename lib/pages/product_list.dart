@@ -39,7 +39,9 @@ class ProductListPageState extends State<ProductListPage>{
                       title: Text('Edit product'),
                     ),
                     body: ProductEditPage());
-              }));
+              })).then((_){
+                model.selectProduct(null);
+              });
             });
       },
     );

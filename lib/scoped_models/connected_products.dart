@@ -9,6 +9,7 @@ import 'dart:async';
 import '../models/product.dart';
 import '../models/user.dart';
 import '../models/auth.dart';
+import '../models/location_data.dart';
 
 class ConnectedProductsModel extends Model {
   List<Product> _products = [];
@@ -19,7 +20,7 @@ class ConnectedProductsModel extends Model {
   bool get isLoading => _isLoading;
 
   void addProduct(
-      String title, String description, String image, double price) {
+      String title, String description, String image, double price, LocationData locData) {
     _isLoading = true;
 
     final Map<String, dynamic> productData = {
@@ -28,7 +29,10 @@ class ConnectedProductsModel extends Model {
       'image':
           'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
       'price': price,
-      'userId': _authenticatedUser.id
+      'userId': _authenticatedUser.id,
+      'loc_lat': locData.latitude,
+      'loc_lng':locData.longitude,
+      'loc_address': locData.address
     };
 
     http
@@ -214,6 +218,10 @@ class ProductsModel extends ConnectedProductsModel {
 
   void selectProduct(String productId) {
     _selProductId = productId;
+    if(productId == null){
+      return;
+    }
+    notifyListeners();
   }
 
   void toogleDisplayMode() {
