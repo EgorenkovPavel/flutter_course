@@ -52,6 +52,7 @@ class ConnectedProductsModel extends Model {
           description: description,
           image: image,
           price: price,
+          location: locData,
           userId: _authenticatedUser.id,
           userEmail: _authenticatedUser.email);
       _products.add(newProduct);
@@ -79,6 +80,7 @@ class ConnectedProductsModel extends Model {
               description: data['description'],
               price: data['price'],
               image: data['image'],
+              location: LocationData(address: data['loc_address'], latitude: data['loc_lat'], longitude: data['loc_lng']),
               userId: data['userId'],
               userEmail: _authenticatedUser.email,
               isFavorite: data['wishlistUsers'] != null &&
@@ -145,6 +147,7 @@ class ProductsModel extends ConnectedProductsModel {
         title: selectedProduct.title,
         description: selectedProduct.description,
         price: selectedProduct.price,
+        location: selectedProduct.location,
         image: selectedProduct.image,
         userId: selectedProduct.userId,
         userEmail: selectedProduct.userEmail,
@@ -160,7 +163,7 @@ class ProductsModel extends ConnectedProductsModel {
   }
 
   void updateProduct(
-      String title, String description, String image, double price) {
+      String title, String description, String image, double price, LocationData locData) {
     _isLoading = true;
 
     final Map<String, dynamic> updateProduct = {
@@ -169,7 +172,10 @@ class ProductsModel extends ConnectedProductsModel {
       'price': price,
       'image':
           'https://limnlcdn.akamaized.net/Assets/Images_Upload/2018/01/05/Chocolade.jpg?maxheight=460&maxwidth=629',
-      'userId': _authenticatedUser.id
+      'userId': _authenticatedUser.id,
+      'loc_lat': locData.latitude,
+      'loc_lng':locData.longitude,
+      'loc_address': locData.address
     };
 
     http
@@ -185,6 +191,7 @@ class ProductsModel extends ConnectedProductsModel {
           description: description,
           image: image,
           price: price,
+          location: locData,
           userId: _authenticatedUser.id,
           userEmail: _authenticatedUser.email);
       final int selectProductIndex = _products.indexWhere((Product product) {

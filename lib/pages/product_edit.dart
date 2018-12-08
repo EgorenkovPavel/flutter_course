@@ -98,7 +98,8 @@ class _productEditPageState extends State<ProductEditPage> {
       updateProduct(_formData['title'],
           _formData['description'],
           _formData['image'],
-          _formData['price']);
+          _formData['price'],
+          _formData['location']);
     }
 
     Navigator.pushReplacementNamed(context, '/products');
@@ -149,7 +150,7 @@ class _productEditPageState extends State<ProductEditPage> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    LocationInput(_setLocation),
+                    LocationInput(_setLocation, product),
                     SizedBox(
                       height: 10.0,
                     ),
