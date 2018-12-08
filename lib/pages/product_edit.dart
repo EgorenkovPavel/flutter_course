@@ -102,7 +102,7 @@ class _productEditPageState extends State<ProductEditPage> {
           _formData['location']);
     }
 
-    Navigator.pushReplacementNamed(context, '/products');
+    Navigator.pushReplacementNamed(context, '/');
   }
 
   Widget _buildSubmitButton() {
