@@ -36,7 +36,7 @@ class ProductCard extends StatelessWidget {
                       PriceTag(
                           model.allProducts[productIndex].price.toString()),
                     ])),
-            AddressTag(),
+            AddressTag(model.allProducts[productIndex].location.address),
             Text(model.allProducts[productIndex].userEmail),
             ButtonBar(
               alignment: MainAxisAlignment.center,

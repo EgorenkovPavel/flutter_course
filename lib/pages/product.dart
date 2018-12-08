@@ -34,6 +34,9 @@ class ProductPage extends StatelessWidget {
         });
   }
 
+  void _showMap(){
+  }
+
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -46,7 +49,10 @@ class ProductPage extends StatelessWidget {
             children: <Widget>[
               Image.network(model.selectedProduct.image),
               TitleDefault(model.selectedProduct.title),
-              AddressTag(),
+              GestureDetector(child: AddressTag(model.selectedProduct.location.address),
+              onTap: (){
+                _showMap();
+              },),
               Text(
                 '\$${model.selectedProduct.price}',
                 style: TextStyle(
