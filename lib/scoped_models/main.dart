@@ -156,7 +156,7 @@ class MainModel extends Model{
     });
 
     _products[selectProductIndex] = newProduct;
-    _selProductId = null;
+//    _selProductId = null;
     notifyListeners();
   }
 

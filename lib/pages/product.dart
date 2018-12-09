@@ -5,6 +5,7 @@ import 'package:scoped_model/scoped_model.dart';
 import '../widgets/title_default.dart';
 import '../widgets/address_tag.dart';
 import '../scoped_models/main.dart';
+import '../widgets/product_fab.dart';
 
 class ProductPage extends StatelessWidget {
 
@@ -71,6 +72,7 @@ class ProductPage extends StatelessWidget {
               )
             ],
           ),
+          floatingActionButton: ProductFab(),
         );
       }),
       onWillPop: () {
