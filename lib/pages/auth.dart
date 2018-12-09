@@ -11,13 +11,25 @@ class AuthPage extends StatefulWidget {
   }
 }
 
-class AuthPageState extends State<AuthPage> {
+class AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
   String _login;
   String _password;
   bool acceptTerms = true;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordTextController = TextEditingController();
   AuthMode _authMode = AuthMode.LOGIN;
+  AnimationController _controller;
+  Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    _controller =
+        AnimationController(vsync: this, duration: Duration(milliseconds: 300));
+    _slideAnimation = Tween<Offset>(begin: Offset(0.0, -2.0), end: Offset.zero)
+        .animate(
+            CurvedAnimation(parent: _controller, curve: Curves.fastOutSlowIn));
+    super.initState();
+  }
 
   DecorationImage _buildBackgroungImage() {
     return DecorationImage(
@@ -41,15 +53,24 @@ class AuthPageState extends State<AuthPage> {
   }
 
   Widget _buildPasswordConfirmTextField() {
-    return TextFormField(
-      decoration: InputDecoration(
-          labelText: 'Confirm password', filled: true, fillColor: Colors.white),
-      obscureText: true,
-      validator: (String value) {
-        if (_passwordTextController.text != value) {
-          return 'Password do not match';
-        }
-      },
+    return FadeTransition(
+      opacity: CurvedAnimation(parent: _controller, curve: Curves.easeIn),
+      child: SlideTransition(
+        position: _slideAnimation,
+        child: TextFormField(
+          decoration: InputDecoration(
+              labelText: 'Confirm password',
+              filled: true,
+              fillColor: Colors.white),
+          obscureText: true,
+          validator: (String value) {
+            if (_passwordTextController.text != value &&
+                _authMode == AuthMode.SINGUP) {
+              return 'Password do not match';
+            }
+          },
+        ),
+      ),
     );
   }
 
@@ -88,7 +109,8 @@ class AuthPageState extends State<AuthPage> {
     }
     _formKey.currentState.save();
 
-    Map<String, dynamic> info = await authenticate(_login, _password, _authMode);
+    Map<String, dynamic> info =
+        await authenticate(_login, _password, _authMode);
 
     if (!info['success']) {
       showDialog(
@@ -137,9 +159,7 @@ class AuthPageState extends State<AuthPage> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    _authMode == AuthMode.SINGUP
-                        ? _buildPasswordConfirmTextField()
-                        : Container(),
+                    _buildPasswordConfirmTextField(),
                     _buildAcceptSwitch(),
                     FlatButton(
                       child: Text(
@@ -148,8 +168,10 @@ class AuthPageState extends State<AuthPage> {
                         setState(() {
                           if (_authMode == AuthMode.LOGIN) {
                             _authMode = AuthMode.SINGUP;
+                            _controller.forward();
                           } else {
                             _authMode = AuthMode.LOGIN;
+                            _controller.reverse();
                           }
                         });
                       },
