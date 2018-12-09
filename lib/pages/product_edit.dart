@@ -5,6 +5,7 @@ import '../models/product.dart';
 import '../scoped_models/main.dart';
 import '../widgets/location.dart';
 import '../models/location_data.dart';
+import '../widgets/image.dart';
 
 class ProductEditPage extends StatefulWidget {
 
@@ -154,7 +155,10 @@ class _productEditPageState extends State<ProductEditPage> {
                     SizedBox(
                       height: 10.0,
                     ),
-                    _buildSubmitButton()
+                    ImageInput(),
+                    SizedBox(
+                      height: 10.0,
+                    ),_buildSubmitButton()
                   ],
                 ),
               ),
